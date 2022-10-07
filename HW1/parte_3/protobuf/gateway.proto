@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+message GatewayRequest{
+    RequestType request_type = 1;
+    string value = 2;
+    int32 client_id = 3;
+    string aux = 4;
+    enum RequestType{
+        ReadStatus = 0;
+        ReadSensor = 1;
+        UpdateStatus = 2;
+        UpdateOnOff = 3;
+        ListCommands = 4;
+    }
+}
+
+message DeviceResponse{
+    string result = 1;
+    string name = 2;
+    int32 sensor_id = 3;
+    int32 client_id = 4;
+    int32 object_status = 5;
+    repeated string object_commands = 6;
+}
+
+message DeviceID{
+    string nome = 1;
+    string ip = 2;
+    int64 port = 3;
+}
