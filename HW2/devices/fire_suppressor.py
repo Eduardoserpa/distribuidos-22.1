@@ -1,23 +1,17 @@
-import './actuators/tv_controller'
-import fire_suppressor_sensor
+import threading
+from HW2.controllers.fire_suppressor_controller import FireSuppressorController
+from HW2.sensors.fire_suppressor_sensor import FireSuppressorSensor
 
-  class FireSuppressor:
-    def __init__(self):
-      self.sensor = fire_suppressor_sensor()
-      self.actuator = FireSuppressorController.new(self.sensor)
+class FireSuppressor:
+  def __init__(self):
+    self.sensor = FireSuppressorSensor()
+    self.controller = FireSuppressorController(self.sensor)
+    try:
+      t1 = threading.Thread(target=self.controller.run)
+      t2 = threading.Thread(target=self.sensor.run)
 
-      t1 = Thread.new do
-        self.actuator.run
+      t1.join()
+      t2.join()
 
-
-      t2 = Thread.new do
-        self.sensor.run
-
-
-      t1.join
-      t2.join
-    rescue Interrupt
+    except ValueError:
       print('Closing...')
-
-
-Devices::FireSystem.new

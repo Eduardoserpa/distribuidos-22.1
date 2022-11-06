@@ -1,21 +1,22 @@
-import './controller_services_pb'
+from sre_parse import State
+from requests import Response
 import controller as Controller
 
-class AirConditionerController < AirConditioner::Service
+class AirConditionerController():
   def initialize(self,sensor):
     self.state = 0
     self.sensor = sensor
 
 
   def run(self):
-    Controller.new('AirConditioner', '50052', self)
+    Controller('AirConditioner', '50052', self)
 
 
   def change_temperature(self, temperature):
     self.state = temperature.value
     self.sensor.factor = temperature.value
-    Response.new(success: true)
+    Response.new(success=True)
 
 
   def get_state(self):
-    State.new(value: self.state)
+    State.new(value=self.state)

@@ -1,8 +1,8 @@
 # import './controller_services_pb'
+from requests import Response
+from HW2.controllers.controller_pb2 import State
 import controller as Controller
-import FireSuppressorService
-
-class FireSuppressorController(FireSuppressorService):
+class FireSuppressorController():
   def __init__(self, sensor):
     self.state = False
     self.sensor = sensor
@@ -16,7 +16,7 @@ class FireSuppressorController(FireSuppressorService):
   def activate(self):
     self.state = True
     self.sensor.fire_suppressor_controller = True
-    Response.new(success: True)
+    Response.new(success=True)
 
 
   def deactivate(self):

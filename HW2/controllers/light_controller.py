@@ -1,22 +1,24 @@
-import './controller_services_pb'
-import './controller'
+from HW2.controllers.controller import Controller
+from requests import Response
 
-class LampController < Lamp::Service
-  def initialize(sensor)
-    @state = false
-    @sensor = sensor
+from HW2.controllers.controller_pb2 import State
 
-
-  def run
-    Controller.new('Lamp', '50051', self)
+class LightController():
+  def __init__(self,sensor):
+    self.state = False
+    self.sensor = sensor
 
 
-  def toggle(*)
-    @state = !@state
-    @sensor.factor = @state
-    Response.new(success: true)
+  def run(self):
+    Controller.new('Light', '50051', self)
 
 
-  def get_state(*)
-    State.new(value: @state ? 1 : 0)
+  def toggle(self):
+    self.state = not self.state
+    self.sensor.factor = self.state
+    Response.new(success=True)
+
+
+  def get_state(self):
+    State.new(value=1 if self.state else 0)
 

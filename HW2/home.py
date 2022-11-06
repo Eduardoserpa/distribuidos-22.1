@@ -1,105 +1,94 @@
-# frozen_string_literal: true
-
-require 'bunny'
-require './client'
-require './actuators/actuator_services_pb'
-require './web_server'
-require 'rack'
-
-class Home
-  def initialize
-    @sensors = []
-    @actuators = []
-    sensors_thread = Thread.new { start_sensors_comms }
-    actuator_thread = Thread.new { start_actuators_comms }
-    webserver_thread = Thread.new { start_webserver }
+import threading
+import time
+import pika
+class Home():
+  def __init__(self):
+    self.sensors = []
+    self.controllers = []
+    sensors_thread =  threading.Thread(target=self.start_sensors_comms)
+    controller_thread = threading.Thread(target=self.start_controllers_comms)
+    webserver_thread = threading.Thread(target=self.start_webserver)
 
     sensors_thread.join
-    actuator_thread.join
+    controller_thread.join
     webserver_thread.join
-  rescue Interrupt
-    @sensors_connection.close
+    self.sensors_connection.close()
 
     exit(0)
-  end
 
-  def start_sensors_comms
-    @sensors_connection = Bunny.new
-    @sensors_connection.start
 
-    channel = @sensors_connection.create_channel
-    @sensors.push(*[
-      { name: 'light.sensor1' },
-      { name: 'temperature.sensor1' },
-      { name: 'smoke.sensor1' }
+  def start_sensors_comms(self):
+    self.sensors_connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    self.sensors_connection.start
+
+    channel = self.sensors_connection.create_channel
+    self.sensors.push([
+      { 'name': 'light.sensor1' },
+      { 'name': 'temperature.sensor1' },
+      { 'name': 'smoke.sensor1' }
     ])
 
-    @sensors.each do |sensor|
-      sensor[:queue] = channel.queue(sensor[:name])
+    for sensor in self.sensors:
+      sensor['queue'] = channel.queue(sensor['name'])
 
-      sensor[:queue].subscribe do |_, _, body|
-        sensor[:state] = body
-        sensor[:last_update] = Time.now
-      end
-    end
+      # sensor['queue'].subscribe do |_, _, body|
+      #   sensor['state'] = body
+      #   sensor['last_update'] = time.now()
 
-    loop do
-      @sensors.each do |sensor|
-        next if sensor[:last_update].nil?
 
-        last_update_diff = Time.now - sensor[:last_update]
-        if last_update_diff > 3
-          sensor[:state] = nil
-        end
-      end
 
-      sleep 5
-    end
-  end
+    while(True):
+      for sensor in self.sensors:
+        if sensor['last_update'] is None:
+          next
 
-  def start_actuators_comms
-    @actuators.push(*[
+        last_update_diff = time.localtime() - sensor['last_update']
+        if last_update_diff > 3:
+          sensor['state'] = None
+
+      time.sleep(5)
+
+
+
+  def start_controllers_comms(self):
+    self.controllers.append([
       {
-        name: 'Ar Condicionado 1',
-        stub: AirConditioner::Stub.new('localhost:50052', :this_channel_is_insecure),
-        kind: :air_conditioner
+        'name': 'Ar Condicionado 1',
+        'stub': AirConditioner::Stub.new('localhost:50052', :this_channel_is_insecure),
+        'kind': 'air_conditioner'
       },
       {
-        name: 'Rociador de Incêndio 1',
-        stub: FireSprinkler::Stub.new('localhost:4000', :this_channel_is_insecure),
-        kind: :fire_sprinkler
+        'name': 'Sistema contra incêndio',
+        'stub': FireSprinkler::Stub.new('localhost:4000', :this_channel_is_insecure),
+        'kind': 'fire_suppressor'
       },
       {
-        name: 'Lâmpada 1',
-        stub: Lamp::Stub.new('localhost:50051', :this_channel_is_insecure),
-        kind: :lamp
+        'name': 'Lâmpada',
+        'stub': Lamp::Stub.new('localhost:50051', :this_channel_is_insecure),
+        'kind': 'light'
       }
     ])
 
-    loop do
-      @actuators.each do |actuator|
-        begin
-          state = actuator[:stub].get_state(Void.new)
-          case actuator[:kind]
-          when :air_conditioner
-            actuator[:state] = state.value
-          when :lamp
-            actuator[:state] = state.value == 1
-          when :fire_sprinkler
-            actuator[:state] = state.value == 1
-          end
-        rescue GRPC::Unavailable
-          actuator[:state] = nil
-        end
-      end
+    while(True):
+      for controller in self.controllers:
+        try:
+          state = controller['stub'].get_state()
+          match controller['kind']:
+            case 'air_conditioner':
+              controller[:state] = state.value
+            case 'light':
+              controller[:state] = state.value == 1
+            case 'fire_suppressor':
+              controller[:state] = state.value == 1
 
-      sleep 1
-    end
-  end
+        except ValueError:
+          controller['state'] = None
 
-  def start_webserver
-    Rack::Handler::WEBrick.run(WebServer.new(@sensors, @actuators), :Port => 9292)
-  end
-end
+      time.sleep(1)
 
-Home.new
+
+
+  def start_webserver(self):
+    Rack::Handler::WEBrick.run(WebServer.new(self.sensors, self.controllers), :Port => 9292)
+
+Home()

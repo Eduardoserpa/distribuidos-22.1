@@ -1,26 +1,19 @@
-import './actuators/light_controller'
-import './sensors/light_sensor'
+import threading
+from HW2.controllers.light_controller import LightController
+from HW2.sensors.light_sensor import LightSensor
+class Light:
+  def __init__(self):
 
-module Devices
-  class Light
-    def initialize
-      @sensor = LightSensor.new
-      @actuator = LampActuator.new(@sensor)
+    self.sensor = LightSensor
+    self.controller = LightController(self.sensor)
+    try:
+      t1 = threading.Thread(self.controller.run)
+      t2 = threading.Thread(self.sensor.run)
 
-      t1 = Thread.new do
-        @actuator.run
-      end
+      t1.join()
+      t2.join()
 
-      t2 = Thread.new do
-        @sensor.run
-      end
+    except ValueError:
+      print('Closing...')
 
-      t1.join
-      t2.join
-    rescue Interrupt
-      puts 'Closing...'
-    end
-  end
-end
 
-Devices::Lamp.new

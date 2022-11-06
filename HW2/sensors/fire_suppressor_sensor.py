@@ -5,11 +5,7 @@ import time
 import pika
 
 class FireSuppressorSensor(object):
-#   attr_reader :smoke_perception
-#   attr_writer :actuator_stinguishing_fire
-#   attr_writer :fire_sprinkler
-
-  def initialize__init__(self):
+  def __init__(self):
     self.smoke_sensor = 0.0
     self.fire_suppressor_controller = False
 
@@ -20,7 +16,6 @@ class FireSuppressorSensor(object):
     self.channel = connection.channel()
 
     self.queue = self.channel.queue_declare(queue='smoke_sensor')
-    # connection.start
 
     while(True):
       self.update_state()

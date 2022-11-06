@@ -1,13 +1,8 @@
-# frozen_string_literal: true
-
 import random
 import time
 import pika
 
 class LightSensor(object):
-#   attr_writer :factor
-#   attr_reader :state
-
   def __init__(self):
     self.state = 0
     self.factor = False

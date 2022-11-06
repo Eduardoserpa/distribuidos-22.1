@@ -1,25 +1,18 @@
-import './actuators/air_conditioner_actuator'
-import './sensors/temperature_sensor'
+import threading
+from HW2.controllers.ac_controller import AirConditionerController
+from HW2.sensors.temperature_sensor import TemperatureSensor
 
 class AirConditioner:
-    def initialize
-      @sensor = TemperatureSensor.new
-      @actuator = AirConditionerActuator.new(@sensor)
+  def __init__(self):
+    self.sensor = TemperatureSensor()
+    self.controller = AirConditionerController(self.sensor)
 
-      t1 = Thread.new do
-        @actuator.run
-      end
+    try:
+      t1 = threading.Thread(target=self.controller.run)
+      t2 = threading.Thread(target=self.sensor.run)
 
-      t2 = Thread.new do
-        @sensor.run
-      end
+      t1.join()
+      t2.join()
 
-      t1.join
-      t2.join
-    rescue Interrupt
-      puts 'Closing...'
-    end
-  end
-end
-
-Devices::AirConditioner.new
+    except ValueError:
+      print('Closing...')
